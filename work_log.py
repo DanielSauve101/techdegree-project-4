@@ -21,7 +21,7 @@ class Entry(Model):
     employee_name = CharField(max_length=100)
     time_spent = IntegerField()
     optional_notes = TextField(null=False)
-    timestamp = TimestampField(default=datetime.datetime.now)
+    timestamp = DateField(default=datetime.datetime.now)
 
     class Meta:
         database = db
@@ -96,7 +96,7 @@ def view_entries(search_query=None):
         entries = search_query
 
     for entry in entries:
-        timestamp = entry.timestamp.strftime('%B %d %Y, %I:%M%p')
+        timestamp = entry.timestamp.strftime('%B %d %Y')
         clear()
         print("Date entered: {}".format(timestamp))
         print('='*len(timestamp))
@@ -106,14 +106,30 @@ def view_entries(search_query=None):
         print("Optional notes: {}".format(entry.optional_notes))
         print('\n'+'='*len(timestamp))
         print('n) next entry')
+        print('u) update entry')
         print('d) delete entry')
         print('q) return to previous menu')
 
         next_action = input('Choice: [Ndq] ').lower().strip()
         if next_action == 'q':
             break
+        elif next_action == 'u':
+            update_entry(entry)
         elif next_action == 'd':
             delete_entry(entry)
+
+
+def update_entry(entry):
+    """Update entry"""
+    print("\nEnter your changes as needed")
+    entry.task_title = input("Task title: ")
+    entry.time_spent = input('Time spent on task in minutes: ')
+    entry.optional_notes = input('Optional Notes: ')
+    entry.timestamp = datetime.datetime.strptime(input("Date (YYYY-MM-DD): "), '%Y-%m-%d')
+
+    if input("Are you sure you accept changes? [yN] ").lower() == 'y':
+        entry.save()
+    clear()
 
 
 def delete_entry(entry):
@@ -131,7 +147,12 @@ def search_by_employee():
 
 def search_by_date():
     """Search by specific date"""
-    pass
+    date = input('Enter a specific date (YYYY-MM-DD): ')
+    date_object = datetime.datetime.strptime(date, '%Y-%m-%d')
+    entries = Entry.select().where(fn.date_trunc('day', Entry.timestamp) == date_object)
+    # Possible second solution
+    # entries = Entry.select().where(Entry.timestamp.day == date_object.day)
+    view_entries(entries)
 
 
 def search_by_range_of_dates():
