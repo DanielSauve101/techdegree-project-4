@@ -149,9 +149,10 @@ def search_by_date():
     """Search by specific date"""
     date = input('Enter a specific date (YYYY-MM-DD): ')
     date_object = datetime.datetime.strptime(date, '%Y-%m-%d')
-    entries = Entry.select().where(fn.date_trunc('day', Entry.timestamp) == date_object)
-    # Possible second solution
-    # entries = Entry.select().where(Entry.timestamp.day == date_object.day)
+    entries = Entry.select().where(
+        (Entry.timestamp.day == date_object.day) &
+        (Entry.timestamp.month == date_object.month) &
+        (Entry.timestamp.year == date_object.year))
     view_entries(entries)
 
 
