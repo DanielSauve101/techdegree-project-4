@@ -56,7 +56,7 @@ work_log = [
 
 class Entry(Model):
     task_title = CharField(max_length=100)
-    employee_name = CharField(max_length=100, unique=True)
+    employee_name = CharField(max_length=100)
     time_spent = IntegerField()
     optional_notes = TextField(null=False)
     timestamp = DateField(default=datetime.datetime.now)
@@ -80,8 +80,7 @@ def main_menu_loop():
     choice = None
 
     while choice != 'q':
-        clear()
-        print("Enter 'q' to quit.")
+        print("\nEnter 'q' to quit.")
         for key, value in main_menu.items():
             print('{}) {}'.format(key, value.__doc__))
         choice = input('Choice: ').lower().strip()
@@ -89,6 +88,10 @@ def main_menu_loop():
         if choice in main_menu:
             clear()
             main_menu[choice]()
+        elif choice == 'q':
+            pass
+        else:
+            print('\nMust select (Abc or q)')
 
 
 def search_menu_loop():
@@ -96,8 +99,7 @@ def search_menu_loop():
     choice = None
 
     while choice != 'q':
-        clear()
-        print("Enter 'q' to return to previous menu.")
+        print("\nEnter 'q' to return to previous menu.")
         for key, value in search_menu.items():
             print('{}) {}'.format(key, value.__doc__))
         choice = input('Choice: ').lower().strip()
@@ -105,75 +107,129 @@ def search_menu_loop():
         if choice in search_menu:
             clear()
             search_menu[choice]()
+        elif choice == 'q':
+            pass
+        else:
+            print('\nMust select (Abcde or q)')
 
 
 def add_entry():
     """Add an entry"""
-    title = input("Please enter the title of the task: ")
-    name = input("Please enter your name: ")
-    time = input("Please enter the time spent on task in minutes: ")
-    notes = input("Please enter any notes (Optional): ")
-
-    # data = sys.stdin.read().strip()
+    title = input('Please enter the title of the task: ')
+    name = input('Enter your name: ')
+    while True:
+        try:
+            time = int(input('Enter the time spent on task in minutes: '))
+        except ValueError:
+            print('\nValue must be a number. Please try again.')
+        else:
+            break
+    notes = input('Enter any notes (Optional): ')
 
     if title and name and time:
-        if input('Save entry [Yn] ').lower() != 'n':
-            Entry.create(task_title=title,
-                         employee_name=name,
-                         time_spent=time,
-                         optional_notes=notes
-                         )
-            print("Saved successfully!")
+        while True:
+            save = input('Save entry [Yn] ').lower()
+            if save == 'y':
+                Entry.create(task_title=title,
+                             employee_name=name,
+                             time_spent=time,
+                             optional_notes=notes
+                             )
+                print('\nEntry saved successfully!')
+                break
+            elif save == 'n':
+                break
+            elif save != 'y' or save != 'n':
+                print('\nYou must enter [Yn]')
 
 
 def view_entries(search_query=None):
     """View entries"""
-    entries = Entry.select().order_by(Entry.timestamp.desc())
-
     if search_query:
         entries = search_query
+    else:
+        entries = Entry.select().order_by(Entry.id.desc())
+    length_of_entries = len(entries)
+    index = 0
+    timestamp = entries[index].timestamp.strftime('%B %d %Y')
 
-    for entry in entries:
-        timestamp = entry.timestamp.strftime('%B %d %Y')
+    while True:
         clear()
-        print("Date entered: {}".format(timestamp))
+        print('Date entered: {}'.format(timestamp))
         print('='*len(timestamp))
-        print("Task title: {}".format(entry.task_title))
-        print("Employee Name: {}".format(entry.employee_name))
-        print("Time spent on task in minutes: {}".format(entry.time_spent))
-        print("Optional notes: {}".format(entry.optional_notes))
+        print('Task title: {}'.format(entries[index].task_title))
+        print('Employee Name: {}'.format(entries[index].employee_name))
+        print('Time spent on task in minutes: {}'.format(entries[index].time_spent))
+        print('Optional notes: {}'.format(entries[index].optional_notes))
         print('\n'+'='*len(timestamp))
         print('n) next entry')
+        print('p) previous entry')
         print('u) update entry')
         print('d) delete entry')
         print('q) return to previous menu')
 
-        next_action = input('Choice: [Ndq] ').lower().strip()
+        next_action = input('Choice: [Npudq] ').lower().strip()
         if next_action == 'q':
             break
+        elif next_action == 'n':
+            if index == (length_of_entries-1):
+                break
+            else:
+                index += 1
+        elif next_action == 'p':
+            if index == 0:
+                break
+            else:
+                index -= 1
         elif next_action == 'u':
-            update_entry(entry)
+            update_entry(entries[index])
+            break
         elif next_action == 'd':
-            delete_entry(entry)
+            delete_entry(entries[index])
+            break
 
 
 def update_entry(entry):
     """Update entry"""
-    print("\nEnter your changes as needed")
-    entry.task_title = input("Task title: ")
-    entry.time_spent = input('Time spent on task in minutes: ')
-    entry.optional_notes = input('Optional Notes: ')
-    entry.timestamp = datetime.datetime.strptime(input("Date (YYYY-MM-DD): "), '%Y-%m-%d')
+    print('\nEnter your changes as needed')
+    title = input('Please enter the title of the task: ')
+    while True:
+        try:
+            time = int(input('Enter the time spent on task in minutes: '))
+        except ValueError:
+            print('\nValue must be a number. Please try again.')
+        else:
+            break
+    notes = input('Enter any notes (Optional): ')
+    while True:
+        try:
+            date = datetime.datetime.strptime(input('Date (YYYY-MM-DD): '), '%Y-%m-%d')
+        except ValueError:
+            print('You must use the following format (YYYY-MM-DD)')
+        else:
+            break
 
-    if input("Are you sure you accept changes? [yN] ").lower() == 'y':
+    if title and time and date:
+        entry.task_title = title
+        entry.time_spent = time
+        entry.optional_notes = notes
+        entry.timestamp = date
         entry.save()
-    clear()
+        print('\nEntry successfully updated!')
 
 
 def delete_entry(entry):
     """Delete an entry"""
-    if input("Are you sure? [yN] ").lower() == 'y':
-        entry.delete_instance()
+    while True:
+        option = input('Are you sure? [yN] ').lower()
+        if option == 'y':
+            entry.delete_instance()
+            print('\nEntry successfully deleted!')
+            break
+        elif option == 'n':
+            break
+        elif option != 'y' or option != 'n':
+            print('\nYou must enter [Yn]')
 
 
 def search_by_employee():
@@ -181,35 +237,73 @@ def search_by_employee():
     employee = input('Enter employee name: ')
     search_query = Entry.select().where(
         Entry.employee_name.contains(employee)).order_by(Entry.timestamp.desc())
-    view_entries(search_query)
+    if search_query:
+        view_entries(search_query)
+    else:
+        print('\nNo employee matches found for {}'.format(employee))
 
 
 def search_by_date():
     """Search by specific date"""
-    date = input('Enter a specific date (YYYY-MM-DD): ')
-    date_object = datetime.datetime.strptime(date, '%Y-%m-%d')
-    search_query = Entry.select().where(Entry.timestamp == date_object)
-    view_entries(search_query)
+    while True:
+        try:
+            date = datetime.datetime.strptime(input('Date (YYYY-MM-DD): '), '%Y-%m-%d')
+        except ValueError:
+            print('\nYou must use the following format (YYYY-MM-DD)')
+        else:
+            break
+    search_query = Entry.select().where(
+        Entry.timestamp == date).order_by(Entry.id.desc())
+
+    if search_query:
+        view_entries(search_query)
+    else:
+        print('\nSorry but there are no entries found for that specific date')
 
 
 def search_by_range_of_dates():
     """Search by range of dates"""
-    start_date = input('Enter a start date (YYYY-MM-DD): ')
-    start_date_object = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+    while True:
+        try:
+            start_date = datetime.datetime.strptime(input('Start date (YYYY-MM-DD): '), '%Y-%m-%d')
+        except ValueError:
+            print('\nYou must use the following format (YYYY-MM-DD)')
+        else:
+            break
 
-    end_date = input('Enter a end date (YYYY-MM-DD): ')
-    end_date_object = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+    while True:
+        try:
+            end_date = datetime.datetime.strptime(input('End date (YYYY-MM-DD): '), '%Y-%m-%d')
+        except ValueError:
+            print('\nYou must use the following format (YYYY-MM-DD)')
+        else:
+            break
+
     search_query = Entry.select().where(Entry.timestamp.between(
-        start_date_object, end_date_object)).order_by(Entry.timestamp.desc())
-    view_entries(search_query)
+        start_date, end_date)).order_by(Entry.timestamp.desc())
+
+    if search_query:
+        view_entries(search_query)
+    else:
+        print('\nSorry but there are no entries found for that range of dates')
 
 
 def search_by_time_spent():
     """Search by time spent"""
-    time = int(input('Enter time spent: '))
+    while True:
+        try:
+            time = int(input('Enter time spent: '))
+        except ValueError:
+            print('\nValue must be a number. Please try again.')
+        else:
+            break
     search_query = Entry.select().where(
         Entry.time_spent == time).order_by(Entry.timestamp.desc())
-    view_entries(search_query)
+
+    if search_query:
+        view_entries(search_query)
+    else:
+        print('\nNo entries found with {} minutes.'.format(time))
 
 
 def search_by_word():
@@ -218,13 +312,17 @@ def search_by_word():
     search_query = Entry.select().where(
         (Entry.task_title.contains(word)) |
         (Entry.optional_notes.contains(word))).order_by(Entry.timestamp.desc())
-    view_entries(search_query)
+
+    if search_query:
+        view_entries(search_query)
+    else:
+        print('\nNo entries found with the word {} in title or notes .'.format(word))
 
 
 main_menu = OrderedDict([
     ('a', add_entry),
     ('b', search_menu_loop),
-    ('v', view_entries),
+    ('c', view_entries),
 ])
 
 search_menu = OrderedDict([
@@ -254,5 +352,5 @@ def add_worklog():
 
 if __name__ == '__main__':
     initialize()
-    add_worklog()
+    # add_worklog()
     main_menu_loop()
