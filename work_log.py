@@ -173,12 +173,12 @@ def view_entries(search_query=None):
             break
         elif next_action == 'n':
             if index == (length_of_entries-1):
-                break
+                index = 0
             else:
                 index += 1
         elif next_action == 'p':
             if index == 0:
-                break
+                index = (length_of_entries-1)
             else:
                 index -= 1
         elif next_action == 'u':
