@@ -12,7 +12,7 @@ MODELS = [work_log.Entry]
 
 class WorklogTests(unittest.TestCase):
     def setUp(self):
-        test_db.bind(MODELS, bind_refs=False, bind_backrefs=False)
+        test_db.bind(MODELS)
         test_db.connect(reuse_if_open=True)
         test_db.create_tables(MODELS, safe=True)
 
