@@ -53,7 +53,7 @@ def main_menu_loop():
         elif choice == 'q':
             pass
         else:
-            print('\nMust select (Abc or q)')
+            print('\nMust select (Ab or q)')
 
 
 def search_menu_loop():
@@ -97,8 +97,7 @@ def add_entry():
                 Entry.create(task_title=title,
                              employee_name=name,
                              time_spent=time,
-                             optional_notes=notes
-                             )
+                             optional_notes=notes)
                 print('\nEntry saved successfully!')
                 break
             elif save == 'n':
@@ -116,9 +115,9 @@ def view_entries(search_query=None):
 
     length_of_entries = len(entries)
     index = 0
-    timestamp = entries[index].timestamp.strftime('%B %d %Y')
 
     while True:
+        timestamp = entries[index].timestamp.strftime('%B %d %Y')
         clear()
         print('Date entered: {}'.format(timestamp))
         print('='*len(timestamp))
@@ -300,7 +299,6 @@ def search_by_word():
 main_menu = OrderedDict([
     ('a', add_entry),
     ('b', search_menu_loop),
-    ('c', view_entries),
 ])
 
 search_menu = OrderedDict([
